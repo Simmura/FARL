@@ -10,7 +10,7 @@ Remember to clean before sending to Git
 
 #include "libtcod.hpp"
 
-int HandleKeys(int &x, int &y);
+int HandleKeys(int &dx, int &dy);
 
 class character{
 public:
@@ -26,10 +26,10 @@ public:
 		symbol = c;
 		colour = d;
 	}
-	void Move(int deltax, int deltay)
+	void Move(int dx, int dy)
 	{
-		x+=deltax;
-		y+=deltay;
+		x+=dx;
+		y+=dy;
 	}
 	void Collision()
 	{
@@ -79,22 +79,24 @@ int main()
 		if (exit)
 			break;
 		PC.Move(dx,dy);
-		//PC.Collision();
+		dx=0;
+		dy=0;
+		PC.Collision();
 	}
 	return 0;
 }
 
-int HandleKeys(int &x, int &y)
+int HandleKeys(int &dx, int &dy)
 {
 	TCOD_key_t key = TCODConsole::waitForKeypress(true);
 	if(key.vk==TCODK_UP)
-		y = -1;
+		dy = -1;
 	if(key.vk==TCODK_DOWN)
-		y = 1;
+		dy = 1;
 	if(key.vk==TCODK_LEFT)
-		x = -1;
+		dx = -1;
 	if(key.vk==TCODK_RIGHT)
-		x = 1;
+		dx = 1;
 	if(key.vk==TCODK_ESCAPE)
 		return 1;
 
