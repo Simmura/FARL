@@ -1,1 +1,1 @@
-A roguelike I'm making for practice. Makes a @ wander around the screen. Needs edge detection. Also, remember to clean before sending to Git.
+A roguelike I'm making for practice. Makes a @ wander around the screen. Needs collision detection with other objects.
