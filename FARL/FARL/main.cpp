@@ -2,15 +2,15 @@
 FARL - Fucking About RogueLike
 Created: 17/02/12
 Last updated: 17/02/12
-Bugs: Doesn't move
-Todo: Get the draw and clear functions working, get movement working
+Bugs:
+Todo: Get the draw and clear functions working
 
 Remember to clean before sending to Git
 */
 
 #include "libtcod.hpp"
 
-int HandleKeys(int x, int y);
+int HandleKeys(int &x, int &y);
 
 class character{
 public:
@@ -58,6 +58,7 @@ int main()
 {	
 	int dx=0;
 	int dy=0;
+	bool exit;
 	character PC;
 	PC.Init(20,20,"@",TCODColor::white);
 	character Goblin;
@@ -74,20 +75,28 @@ int main()
 		con->printLeft(PC.x, PC.y, TCOD_BKGND_SET, PC.symbol);
 		TCODConsole::blit(con,0,0,80,50,TCODConsole::root,0,0,1.0); // blits con onto the root
 		TCODConsole::root->flush(); // actually prints the stuff?
-		HandleKeys(dx,dy);
+		exit = HandleKeys(dx,dy);
+		if (exit)
+			break;
 		PC.Move(dx,dy);
 		//PC.Collision();
 	}
 	return 0;
 }
 
-int HandleKeys(int x, int y)
+int HandleKeys(int &x, int &y)
 {
 	TCOD_key_t key = TCODConsole::waitForKeypress(true);
-	if(key.vk=TCODK_UP)
+	if(key.vk==TCODK_UP)
 		y = -1;
-	if(key.vk=TCODK_DOWN)
+	if(key.vk==TCODK_DOWN)
 		y = 1;
+	if(key.vk==TCODK_LEFT)
+		x = -1;
+	if(key.vk==TCODK_RIGHT)
+		x = 1;
+	if(key.vk==TCODK_ESCAPE)
+		return 1;
 
 	return 0;
 }
