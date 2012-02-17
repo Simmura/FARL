@@ -1,14 +1,16 @@
 /*
 FARL - Fucking About RogueLike
-Created: 17/02/12
+Created: 16/02/12
 Last updated: 17/02/12
-Bugs:
-Todo: Collision with other chars
+Bugs: Movement currently broken
+Todo: Run through a list to clear/draw all characters
 
 Remember to clean before sending to Git
 */
 
 #include "libtcod.hpp"
+#include <list>
+using namespace std;
 
 int HandleKeys(int &dx, int &dy);
 
@@ -33,7 +35,9 @@ public:
 	{
 		x+=dx;
 		y+=dy;
+		Collision();
 	}
+private:
 	void Collision()
 	{
 		if(x<0)
@@ -45,6 +49,7 @@ public:
 		if(y>=SCREEN_HEIGHT)
 			y=SCREEN_HEIGHT-1;
 	}
+public:
 	void Draw(TCODConsole *console)
 	{
 		console->setForegroundColor(colour);
@@ -54,39 +59,42 @@ public:
 	{
 		console->printLeft(x, y, TCOD_BKGND_NONE, " ");
 	}
-
 };
-
-
 
 int main()
 {	
 	int dx=0;
 	int dy=0;
-	bool exit;
+	bool exit = 0;
 	character PC;
 	PC.Init(20,20,"@",TCODColor::white);
 	character Goblin;
 	Goblin.Init(12,12,"g",TCODColor::green);
 	TCODConsole::root->initRoot(SCREEN_WIDTH,SCREEN_HEIGHT,"FARL",false); // inits libtcod
 	TCODConsole *con = new TCODConsole(SCREEN_WIDTH,SCREEN_HEIGHT); // inits a new console
-
+	character object_array[2] = {PC, Goblin};
 	
 	while(1){
-
-		PC.Draw(con);
-		Goblin.Draw(con);
+		for(int i=0;i<2;i++)
+			object_array[i]=*(object_array + i);
+		//object_array[0]=PC;
+		//object_array[1]=Goblin;
+		for(int i = 0;i<2;i++)
+			object_array[i].Draw(con);
+		//PC.Draw(con);
+		//Goblin.Draw(con);
 		TCODConsole::blit(con,0,0,SCREEN_WIDTH,SCREEN_HEIGHT,TCODConsole::root,0,0,1.0); // blits con onto the root
-		TCODConsole::root->flush(); // actually prints the stuff?
+		TCODConsole::root->flush(); // actually prints the stuff
 		exit = HandleKeys(dx,dy);
 		if (exit)
 			break;
-		PC.Clear(con);
-		Goblin.Clear(con);
+		for(int i=0;i<2;i++)
+			object_array[i].Clear(con);
+		//PC.Clear(con);
+		//Goblin.Clear(con);
 		PC.Move(dx,dy);
 		dx=0;
 		dy=0;
-		PC.Collision();
 	}
 	return 0;
 }
