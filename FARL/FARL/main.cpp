@@ -3,7 +3,7 @@ FARL - Fucking About RogueLike
 Created: 17/02/12
 Last updated: 17/02/12
 Bugs:
-Todo: Get the draw and clear functions working
+Todo: Collision with other chars
 
 Remember to clean before sending to Git
 */
@@ -11,6 +11,9 @@ Remember to clean before sending to Git
 #include "libtcod.hpp"
 
 int HandleKeys(int &dx, int &dy);
+
+const int SCREEN_WIDTH = 80;
+const int SCREEN_HEIGHT = 50;
 
 class character{
 public:
@@ -35,24 +38,26 @@ public:
 	{
 		if(x<0)
 			x=0;
-		if(x>=79)
-			x=79;
+		if(x>=SCREEN_WIDTH)
+			x=SCREEN_WIDTH-1;
 		if(y<0)
 			y=0;
-		if(y>=49)
-			y=49;
+		if(y>=SCREEN_HEIGHT)
+			y=SCREEN_HEIGHT-1;
 	}
-	//void Draw()
-	//{
-	//	con->setForegroundColor(colour);
-	//	con->printLeft(x, y, TCOD_BKGND_NONE, symbol);
-	//}
-	//void Clear()
-	//{
-		//con->printLeft(x, y, TCOD_BKGND_NONE, " ");
-	//}
+	void Draw(TCODConsole *console)
+	{
+		console->setForegroundColor(colour);
+		console->printLeft(x, y, TCOD_BKGND_NONE, symbol);
+	}
+	void Clear(TCODConsole *console)
+	{
+		console->printLeft(x, y, TCOD_BKGND_NONE, " ");
+	}
 
 };
+
+
 
 int main()
 {	
@@ -62,22 +67,22 @@ int main()
 	character PC;
 	PC.Init(20,20,"@",TCODColor::white);
 	character Goblin;
-	//Goblin.Init(12,12,"g",TCODColor::green);
-	TCODConsole::root->initRoot(80,50,"FARL",false); // inits libtcod
-	TCODConsole *con = new TCODConsole(80,50); // inits a new console
+	Goblin.Init(12,12,"g",TCODColor::green);
+	TCODConsole::root->initRoot(SCREEN_WIDTH,SCREEN_HEIGHT,"FARL",false); // inits libtcod
+	TCODConsole *con = new TCODConsole(SCREEN_WIDTH,SCREEN_HEIGHT); // inits a new console
 
 	
 	while(1){
-		con->clear();
-		//PC.Draw();
-		//Goblin.Draw();
-		//con->setForegroundColor(PC.colour);
-		con->printLeft(PC.x, PC.y, TCOD_BKGND_SET, PC.symbol);
-		TCODConsole::blit(con,0,0,80,50,TCODConsole::root,0,0,1.0); // blits con onto the root
+
+		PC.Draw(con);
+		Goblin.Draw(con);
+		TCODConsole::blit(con,0,0,SCREEN_WIDTH,SCREEN_HEIGHT,TCODConsole::root,0,0,1.0); // blits con onto the root
 		TCODConsole::root->flush(); // actually prints the stuff?
 		exit = HandleKeys(dx,dy);
 		if (exit)
 			break;
+		PC.Clear(con);
+		Goblin.Clear(con);
 		PC.Move(dx,dy);
 		dx=0;
 		dy=0;
