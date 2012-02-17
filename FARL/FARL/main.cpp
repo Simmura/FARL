@@ -16,6 +16,8 @@ int HandleKeys(int &dx, int &dy);
 
 const int SCREEN_WIDTH = 80;
 const int SCREEN_HEIGHT = 50;
+const int MAP_WIDTH = 80;
+const int MAP_HEIGHT = 45;
 
 class character{
 public:
@@ -66,32 +68,30 @@ int main()
 	int dx=0;
 	int dy=0;
 	bool exit = 0;
+	TCODList<character*> objects;
 	character PC;
 	PC.Init(20,20,"@",TCODColor::white);
 	character Goblin;
 	Goblin.Init(12,12,"g",TCODColor::green);
 	TCODConsole::root->initRoot(SCREEN_WIDTH,SCREEN_HEIGHT,"FARL",false); // inits libtcod
 	TCODConsole *con = new TCODConsole(SCREEN_WIDTH,SCREEN_HEIGHT); // inits a new console
-	character object_array[2] = {PC, Goblin};
+
+	objects.push(&PC);
+	objects.push(&Goblin);
+
+
 	
 	while(1){
-		for(int i=0;i<2;i++)
-			object_array[i]=*(object_array + i);
-		//object_array[0]=PC;
-		//object_array[1]=Goblin;
-		for(int i = 0;i<2;i++)
-			object_array[i].Draw(con);
-		//PC.Draw(con);
-		//Goblin.Draw(con);
+		for(character **it = objects.begin(); it!= objects.end(); it++)
+			(*it)->Draw(con);
+
 		TCODConsole::blit(con,0,0,SCREEN_WIDTH,SCREEN_HEIGHT,TCODConsole::root,0,0,1.0); // blits con onto the root
 		TCODConsole::root->flush(); // actually prints the stuff
 		exit = HandleKeys(dx,dy);
 		if (exit)
 			break;
-		for(int i=0;i<2;i++)
-			object_array[i].Clear(con);
-		//PC.Clear(con);
-		//Goblin.Clear(con);
+		for(character **it = objects.begin(); it!= objects.end(); it++)
+			(*it)->Clear(con);
 		PC.Move(dx,dy);
 		dx=0;
 		dy=0;
