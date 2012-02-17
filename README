@@ -1,1 +1,1 @@
-A roguelike I'm making for practice. Makes a @ wander around the screen. Needs collision detection with other objects.
+A roguelike I'm making for practice. Makes a @ wander around the screen. Needs working movement, draw anc clear functions

@@ -2,41 +2,37 @@
 FARL - Fucking About RogueLike
 Created: 17/02/12
 Last updated: 17/02/12
-Bugs:
-Todo: Get collision detection with objects working
+Bugs: Doesn't move
+Todo: Get the draw and clear functions working, get movement working
 
 Remember to clean before sending to Git
 */
 
 #include "libtcod.hpp"
 
-
+int HandleKeys(int x, int y);
 
 class character{
 public:
 	int x;
 	int y;
 	const char* symbol;
+	TCODColor colour;
 
-	void Init(int a, int b, const char* c)
+	void Init(int a, int b, const char* c, TCODColor d)
 	{
 		x = a;
 		y = b;
 		symbol = c;
+		colour = d;
 	}
-
-	void GetMove()
+	void Move(int deltax, int deltay)
 	{
-		TCOD_key_t key = TCODConsole::checkForKeypress();
-		if (key.vk == TCODK_UP)
-			y--;
-		if (key.vk == TCODK_DOWN)
-			y++;
-		if (key.vk == TCODK_LEFT)
-			x--;
-		if (key.vk == TCODK_RIGHT)
-			x++;
-
+		x+=deltax;
+		y+=deltay;
+	}
+	void Collision()
+	{
 		if(x<0)
 			x=0;
 		if(x>=79)
@@ -46,21 +42,52 @@ public:
 		if(y>=49)
 			y=49;
 	}
+	//void Draw()
+	//{
+	//	con->setForegroundColor(colour);
+	//	con->printLeft(x, y, TCOD_BKGND_NONE, symbol);
+	//}
+	//void Clear()
+	//{
+		//con->printLeft(x, y, TCOD_BKGND_NONE, " ");
+	//}
 
 };
 
 int main()
 {	
+	int dx=0;
+	int dy=0;
 	character PC;
-	PC.Init(20,20,"@");
+	PC.Init(20,20,"@",TCODColor::white);
+	character Goblin;
+	//Goblin.Init(12,12,"g",TCODColor::green);
 	TCODConsole::root->initRoot(80,50,"FARL",false); // inits libtcod
+	TCODConsole *con = new TCODConsole(80,50); // inits a new console
+
 	
 	while(1){
-		PC.GetMove();
-		TCODConsole::root->clear();
-		TCODConsole::root->printLeft(PC.x, PC.y, TCOD_BKGND_SET, PC.symbol); // TCOD_BKGND_SET just sets it to the console's colours - white on black
-		TCODConsole::root->printLeft(12, 12, TCOD_BKGND_SET, "#");
+		con->clear();
+		//PC.Draw();
+		//Goblin.Draw();
+		//con->setForegroundColor(PC.colour);
+		con->printLeft(PC.x, PC.y, TCOD_BKGND_SET, PC.symbol);
+		TCODConsole::blit(con,0,0,80,50,TCODConsole::root,0,0,1.0); // blits con onto the root
 		TCODConsole::root->flush(); // actually prints the stuff?
+		HandleKeys(dx,dy);
+		PC.Move(dx,dy);
+		//PC.Collision();
 	}
+	return 0;
+}
+
+int HandleKeys(int x, int y)
+{
+	TCOD_key_t key = TCODConsole::waitForKeypress(true);
+	if(key.vk=TCODK_UP)
+		y = -1;
+	if(key.vk=TCODK_DOWN)
+		y = 1;
+
 	return 0;
 }
