@@ -9,9 +9,9 @@ class character{
 public:
 	int x;
 	int y;
-	char symbol;
+	const char* symbol;
 
-	void Init(int a, int b, char c)
+	void Init(int a, int b, const char* c)
 	{
 		x = a;
 		y = b;
@@ -36,16 +36,14 @@ public:
 int main()
 {	
 	character PC;
-	PC.Init(20,20,'@');
+	PC.Init(20,20,"@");
 	TCODConsole::root->initRoot(80,50,"FARL",false);
-	//TCODConsole::credits();
-	TCODConsole::setColorControl(TCOD_COLCTRL_1,TCODColor::red,TCODColor::black);
-	TCODConsole::root->printLeft(PC.x, PC.y, TCOD_BKGND_SET, "RAR",TCOD_COLCTRL_1,TCOD_COLCTRL_STOP);
+	TCODConsole::root->printLeft(PC.x, PC.y, TCOD_BKGND_SET, PC.symbol);
 	
 	while(1){
 		PC.GetMove();
 		TCODConsole::root->clear();
-		TCODConsole::root->printLeft(PC.x, PC.y, TCOD_BKGND_SET, "RAR",TCOD_COLCTRL_1,TCOD_COLCTRL_STOP);
+		TCODConsole::root->printLeft(PC.x, PC.y, TCOD_BKGND_SET, PC.symbol);
 		TCODConsole::root->flush();
 	}
 	return 0;
