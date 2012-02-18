@@ -2,8 +2,8 @@
 FARL - Fucking About RogueLike
 Created: 16/02/12
 Last updated: 17/02/12
-Bugs: Movement currently broken
-Todo: Run through a list to clear/draw all characters
+Bugs: 
+Todo:Get map drawing working
 
 Remember to clean before sending to Git
 */
@@ -18,6 +18,11 @@ const int SCREEN_WIDTH = 80;
 const int SCREEN_HEIGHT = 50;
 const int MAP_WIDTH = 80;
 const int MAP_HEIGHT = 45;
+
+TCODColor colour_dark_wall(0,0,100);
+TCODColor colour_dark_ground(50,50,150);
+
+
 
 class character{
 public:
@@ -62,6 +67,20 @@ public:
 		console->printLeft(x, y, TCOD_BKGND_NONE, " ");
 	}
 };
+
+class tile{
+public:
+	bool blocked;
+	bool block_sight;
+
+	tile(bool a, bool b){
+		blocked = a;
+		block_sight = b;
+	}
+};
+
+TCODList<character> map_x(MAP_WIDTH);
+TCODList<TCODList<character>> map_y(MAP_HEIGHT);
 
 int main()
 {	
@@ -114,4 +133,12 @@ int HandleKeys(int &dx, int &dy)
 		return 1;
 
 	return 0;
+}
+
+void MakeMap()
+{
+	for(TCODList<TCODList<character>> **it=map_y.begin();it!=map_y.end();it++)
+		for(TCODList<character> *it2 = map_x.begin();it2 <map_x.end();it2++){
+				map_x.push(tile(false,false));
+		}
 }
