@@ -1,9 +1,9 @@
 /*
 FARL - Fucking About RogueLike
 Created: 16/02/12
-Last updated: 17/02/12
+Last updated: 01/03/12
 Bugs: 
-Todo:Get map drawing working
+Todo: Part 3 of the tutorial
 
 Remember to clean before sending to Git
 */
@@ -13,6 +13,7 @@ Remember to clean before sending to Git
 using namespace std;
 
 int HandleKeys(int &dx, int &dy);
+void MakeMap();
 
 const int SCREEN_WIDTH = 80;
 const int SCREEN_HEIGHT = 50;
@@ -23,6 +24,22 @@ TCODColor colour_dark_wall(0,0,100);
 TCODColor colour_dark_ground(50,50,150);
 
 
+class tile{
+public:
+	bool blocked;
+	bool block_sight;
+
+	tile(bool a, bool b)
+	{
+		blocked = a;
+		block_sight = b;
+	}
+	tile()
+	{
+	}
+};
+
+tile map[MAP_WIDTH][MAP_HEIGHT];
 
 class character{
 public:
@@ -40,8 +57,10 @@ public:
 	}
 	void Move(int dx, int dy)
 	{
-		x+=dx;
-		y+=dy;
+		if(map[x+dx][y+dy].blocked==false){
+			x+=dx;
+			y+=dy;
+		}
 		Collision();
 	}
 private:
@@ -68,19 +87,10 @@ public:
 	}
 };
 
-class tile{
-public:
-	bool blocked;
-	bool block_sight;
 
-	tile(bool a, bool b){
-		blocked = a;
-		block_sight = b;
-	}
-};
+void RenderAll(TCODConsole *console, TCODList<character*> objects);
 
-TCODList<character> map_x(MAP_WIDTH);
-TCODList<TCODList<character>> map_y(MAP_HEIGHT);
+
 
 int main()
 {	
@@ -90,21 +100,22 @@ int main()
 	TCODList<character*> objects;
 	character PC;
 	PC.Init(20,20,"@",TCODColor::white);
-	character Goblin;
-	Goblin.Init(12,12,"g",TCODColor::green);
+	//character Goblin;
+	//Goblin.Init(12,12,"g",TCODColor::green);
 	TCODConsole::root->initRoot(SCREEN_WIDTH,SCREEN_HEIGHT,"FARL",false); // inits libtcod
 	TCODConsole *con = new TCODConsole(SCREEN_WIDTH,SCREEN_HEIGHT); // inits a new console
 
 	objects.push(&PC);
-	objects.push(&Goblin);
+	//objects.push(&Goblin);
+	MakeMap();
 
-
+	map[30][22].blocked = true;
+	map[30][22].block_sight = true;
+	map[50][22].blocked = true;
+	map[50][22].block_sight = true;
 	
 	while(1){
-		for(character **it = objects.begin(); it!= objects.end(); it++)
-			(*it)->Draw(con);
-
-		TCODConsole::blit(con,0,0,SCREEN_WIDTH,SCREEN_HEIGHT,TCODConsole::root,0,0,1.0); // blits con onto the root
+		RenderAll(con,objects);
 		TCODConsole::root->flush(); // actually prints the stuff
 		exit = HandleKeys(dx,dy);
 		if (exit)
@@ -137,8 +148,26 @@ int HandleKeys(int &dx, int &dy)
 
 void MakeMap()
 {
-	for(TCODList<TCODList<character>> **it=map_y.begin();it!=map_y.end();it++)
-		for(TCODList<character> *it2 = map_x.begin();it2 <map_x.end();it2++){
-				map_x.push(tile(false,false));
+	for (int i = 0;i<MAP_WIDTH;i++){
+		for (int j = 0;j<MAP_HEIGHT;j++)
+			map[i][j]=tile(false,false);
+	}
+}
+
+void RenderAll(TCODConsole *console, TCODList<character*> objects)
+{
+	bool wall;
+	for(int i = 0;i<MAP_WIDTH;i++){
+		for(int j=0;j<MAP_HEIGHT;j++){
+			wall = map[i][j].block_sight;
+			if(wall==true)
+				console->setBack(i, j, colour_dark_wall, TCOD_BKGND_SET);
+			else
+				console ->setBack(i, j, colour_dark_ground, TCOD_BKGND_SET);
 		}
+	}
+
+	for(character **it = objects.begin(); it!= objects.end(); it++)
+			(*it)->Draw(console);
+	TCODConsole::blit(console,0,0,SCREEN_WIDTH,SCREEN_HEIGHT,TCODConsole::root,0,0,1.0);
 }
