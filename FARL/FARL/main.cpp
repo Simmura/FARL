@@ -1,9 +1,9 @@
 /*
 FARL - Fucking About RogueLike
 Created: 16/02/12
-Last updated: 01/03/12
+Last updated: 02/03/12
 Bugs: 
-Todo: Get multiple rooms working
+Todo: Get multiple rooms working properly
 
 Remember to clean before sending to Git
 */
@@ -186,24 +186,26 @@ void MakeMap(TCODList<rect*> rooms, character &player)
 	int num_rooms = 0;
 	int w,h,x,y,new_x,new_y,prev_x,prev_y,hold;
 	bool failed = false;
+	rect *new_room;
 	for(int i = 0;i<MAX_ROOMS;i++){
+		failed = false;
 		w = default->getInt(ROOM_MIN_SIZE,ROOM_MAX_SIZE);
 		h = default->getInt(ROOM_MIN_SIZE,ROOM_MAX_SIZE);
 		x = default->getInt(0,MAP_WIDTH-w-1);
 		y = default->getInt(0,MAP_HEIGHT-h-1);
-		rect new_room(x,y,w,h);
+		new_room = new rect(x,y,w,h);
 		if (num_rooms!=0){
 			for(rect **it = rooms.begin(); it != rooms.end(); it++){
-				if(new_room.Intersect(**it)){
+				if(new_room->Intersect(**it)){
 					failed = true;
 					break;
 				}
 			}
 		}
 		if(failed == false){
-			CreateRoom(new_room);
-			new_x=new_room.centre_x;
-			new_y=new_room.centre_y;
+			CreateRoom(*new_room);
+			new_x=new_room->centre_x;
+			new_y=new_room->centre_y;
 			if(num_rooms==0){
 				player.x=new_x;
 				player.y=new_y;
@@ -221,7 +223,7 @@ void MakeMap(TCODList<rect*> rooms, character &player)
 					CreateHTunnel(prev_x,new_x,prev_y);
 				}
 			}
-			rooms.push(&new_room);
+			rooms.push(new_room);
 			num_rooms++;
 		}
 	}
