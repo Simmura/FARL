@@ -3,7 +3,7 @@ FARL - Fucking About RogueLike
 Created: 16/02/12
 Last updated: 06/03/12
 Bugs: 
-Todo: Get multiple rooms working properly
+Todo: Combat! :D
 
 Remember to clean before sending to Git
 */
@@ -12,7 +12,7 @@ Remember to clean before sending to Git
 #include <list>
 using namespace std;
 
-bool HandleKeys(int &dx, int &dy);
+bool HandleKeys(int &dx, int &dy, bool &fov_recompute);
 
 
 const int SCREEN_WIDTH = 80;
@@ -22,21 +22,29 @@ const int MAP_HEIGHT = 45;
 const int ROOM_MAX_SIZE = 10;
 const int ROOM_MIN_SIZE = 6;
 const int MAX_ROOMS = 30;
+const bool FOV_LIGHT_WALLS = true;
+const int TORCH_RADIUS = 10;
+const TCOD_fov_algorithm_t FOV_ALGO = FOV_BASIC;
 
 TCODColor colour_dark_wall(0,0,100);
+TCODColor colour_light_wall(130,110,50);
 TCODColor colour_dark_ground(50,50,150);
+TCODColor colour_light_ground(200,180,50);
 TCODRandom * default = TCODRandom::getInstance();
+
 
 
 class tile{
 public:
 	bool blocked;
 	bool block_sight;
+	bool explored;
 
 	tile(bool a, bool b)
 	{
 		blocked = a;
 		block_sight = b;
+		explored = false;
 	}
 	tile()
 	{
@@ -122,15 +130,16 @@ public:
 	}
 };
 
-
-void RenderAll(TCODConsole *console, TCODList<character*> objects);
+TCODMap *fov_map = new TCODMap(MAP_WIDTH,MAP_HEIGHT);
+void RenderAll(TCODConsole *console, TCODList<character*> objects, bool &fov_recompute, character player);
 void MakeMap(TCODList<rect*> rooms, character &player);
+
 
 
 
 int main()
 {	
-	
+	bool recompute_fov = true;
 	int dx=0;
 	int dy=0;
 	bool exit = 0;
@@ -146,9 +155,9 @@ int main()
 
 	
 	while(1){
-		RenderAll(con,objects);
+		RenderAll(con,objects,recompute_fov, PC);
 		TCODConsole::root->flush(); // actually prints the stuff
-		exit = HandleKeys(dx,dy);
+		exit = HandleKeys(dx,dy,recompute_fov);
 		if (exit)
 			break;
 		for(character **it = objects.begin(); it!= objects.end(); it++)
@@ -160,17 +169,25 @@ int main()
 	return 0;
 }
 
-bool HandleKeys(int &dx, int &dy)
+bool HandleKeys(int &dx, int &dy, bool &recompute_fov)
 {
 	TCOD_key_t key = TCODConsole::waitForKeypress(true);
-	if(key.vk==TCODK_UP)
+	if(key.vk==TCODK_UP){
+		recompute_fov = true;
 		dy = -1;
-	if(key.vk==TCODK_DOWN)
+	}
+	if(key.vk==TCODK_DOWN){
+		recompute_fov = true;
 		dy = 1;
-	if(key.vk==TCODK_LEFT)
+	}
+	if(key.vk==TCODK_LEFT){
+		recompute_fov = true;
 		dx = -1;
-	if(key.vk==TCODK_RIGHT)
+	}
+	if(key.vk==TCODK_RIGHT){
+		recompute_fov = true;
 		dx = 1;
+	}
 	if(key.vk==TCODK_ESCAPE)
 		return 1;
 
@@ -179,10 +196,19 @@ bool HandleKeys(int &dx, int &dy)
 
 void MakeMap(TCODList<rect*> rooms, character &player)
 {
+
+	
 	for (int i = 0;i<MAP_WIDTH;i++){
 		for (int j = 0;j<MAP_HEIGHT;j++)
 			map[i][j]=tile(true,true);
 	}
+	for(int i = 0;i<MAP_WIDTH;i++){
+		for (int j = 0;j<MAP_HEIGHT;j++){
+			fov_map->setProperties(i,j,~map[i][j].block_sight,~map[i][j].blocked);
+		}
+	}
+
+
 	int num_rooms = 0;
 	int w,h,x,y,new_x,new_y,prev_x,prev_y,hold;
 	bool failed = false;
@@ -229,16 +255,33 @@ void MakeMap(TCODList<rect*> rooms, character &player)
 	}
 }
 
-void RenderAll(TCODConsole *console, TCODList<character*> objects)
+void RenderAll(TCODConsole *console, TCODList<character*> objects, bool &fov_recompute, character player)
 {
+	if(fov_recompute==true){
+		fov_recompute=false;
+		fov_map->computeFov(player.x,player.y,TORCH_RADIUS,FOV_LIGHT_WALLS,FOV_ALGO);
+	}
 	bool wall;
+	bool visible;
 	for(int i = 0;i<MAP_WIDTH;i++){
 		for(int j=0;j<MAP_HEIGHT;j++){
+			visible = fov_map->isInFov(i,j);
 			wall = map[i][j].block_sight;
-			if(wall==true)
-				console->setBack(i, j, colour_dark_wall, TCOD_BKGND_SET);
-			else
-				console ->setBack(i, j, colour_dark_ground, TCOD_BKGND_SET);
+			if(visible==false){
+				if(map[i][j].explored==true){
+					if(wall==true)
+						console->setBack(i, j, colour_dark_wall, TCOD_BKGND_SET);
+					else
+						console ->setBack(i, j, colour_dark_ground, TCOD_BKGND_SET);
+				}
+			}
+			else{
+				if(wall==true)
+					console->setBack(i, j, colour_light_wall, TCOD_BKGND_SET);
+				else
+					console ->setBack(i, j, colour_light_ground, TCOD_BKGND_SET);
+				map[i][j].explored=true;
+			}
 		}
 	}
 
