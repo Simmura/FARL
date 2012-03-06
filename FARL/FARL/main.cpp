@@ -1,7 +1,7 @@
 /*
 FARL - Fucking About RogueLike
 Created: 16/02/12
-Last updated: 04/03/12
+Last updated: 06/03/12
 Bugs: 
 Todo: Get multiple rooms working properly
 
@@ -260,13 +260,13 @@ void CreateRoom(rect room)
 void CreateHTunnel(int x1,int x2,int y)
 {
 	if(x2>x1){
-		for(int i = x1;i<x2;i++){
+		for(int i = x1;i<x2+1;i++){
 			map[i][y].blocked=false;
 			map[i][y].block_sight=false;
 		}
 	}
 	else{
-		for(int i = x2;i<x1;i++){
+		for(int i = x2;i<x1+1;i++){
 			map[i][y].blocked=false;
 			map[i][y].block_sight=false;
 		}
@@ -276,13 +276,13 @@ void CreateHTunnel(int x1,int x2,int y)
 void CreateVTunnel(int y1,int y2,int x)
 {
 	if(y2>y1){
-		for(int i = y1;i<y2;i++){
+		for(int i = y1;i<y2+1;i++){
 			map[x][i].blocked=false;
 			map[x][i].block_sight=false;
 		}
 	}
 	else{
-		for(int i = y2;i<y1;i++){
+		for(int i = y2;i<y1+1;i++){
 			map[x][i].blocked=false;
 			map[x][i].block_sight=false;
 		}
