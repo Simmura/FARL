@@ -1,7 +1,7 @@
 /*
 FARL - Fucking About RogueLike
 Created: 16/02/12
-Last updated: 06/03/12
+Last updated: 07/03/12
 Bugs: 
 Todo: Combat! :D
 
@@ -25,6 +25,7 @@ const int MAX_ROOMS = 30;
 const bool FOV_LIGHT_WALLS = true;
 const int TORCH_RADIUS = 10;
 const TCOD_fov_algorithm_t FOV_ALGO = FOV_BASIC;
+const int MAX_ROOM_MONSTERS = 3;
 
 TCODColor colour_dark_wall(0,0,100);
 TCODColor colour_light_wall(130,110,50);
@@ -80,9 +81,11 @@ public:
 void CreateRoom(rect room);
 void CreateHTunnel(int x1, int x2, int y);
 void CreateVTunnel(int y1,int y2,int x);
+void PlaceObjects(rect room);
 
 
 tile map[MAP_WIDTH][MAP_HEIGHT];
+
 
 class character{
 public:
@@ -90,35 +93,25 @@ public:
 	int y;
 	const char* symbol;
 	TCODColor colour;
+	const char* name;
+	bool blocks;
 
-	void Init(int a, int b, const char* c, TCODColor d)
+	character(int a, int b, const char* c, TCODColor d, const char* e)
 	{
 		x = a;
 		y = b;
 		symbol = c;
 		colour = d;
+		name = e;
+		blocks = true;
 	}
-	void Move(int dx, int dy)
+	void Move(int dx, int dy, TCODList<character*> objects)
 	{
-		if(map[x+dx][y+dy].blocked==false){
+		if(IsBlocked(dx,dy,objects)==false){
 			x+=dx;
 			y+=dy;
 		}
-		Collision();
 	}
-private:
-	void Collision()
-	{
-		if(x<0)
-			x=0;
-		if(x>=SCREEN_WIDTH)
-			x=SCREEN_WIDTH-1;
-		if(y<0)
-			y=0;
-		if(y>=SCREEN_HEIGHT)
-			y=SCREEN_HEIGHT-1;
-	}
-public:
 	void Draw(TCODConsole *console)
 	{
 		console->setForegroundColor(colour);
@@ -128,14 +121,23 @@ public:
 	{
 		console->printLeft(x, y, TCOD_BKGND_NONE, " ");
 	}
+	bool IsBlocked(int dx, int dy, TCODList<character*> objects)
+	{
+		if(map[x+dx][y+dy].blocked==true)
+			return true;
+		for(character **it = objects.begin(); it!= objects.end(); it++){
+			if(((*it)->blocks == true) && ((*it)->x == (x+dx)) && ((*it)->y == (y+dy)))
+				return true;
+		}
+		return false;
+	}
 };
+	
 
 TCODMap *fov_map = new TCODMap(MAP_WIDTH,MAP_HEIGHT);
 void RenderAll(TCODConsole *console, TCODList<character*> objects, bool &fov_recompute, character player);
-void MakeMap(TCODList<rect*> rooms, character &player);
-
-
-
+void PlaceObjects(rect room, TCODList<character*> &objects);
+void MakeMap(TCODList<rect*> rooms, character &player, TCODList<character*> &objects);
 
 int main()
 {	
@@ -145,13 +147,12 @@ int main()
 	bool exit = 0;
 	TCODList<character*> objects;
 	TCODList<rect*> rooms;
-	character PC;
-	PC.Init(25,23,"@",TCODColor::white);
+	character PC(25,23,"@",TCODColor::white,"PC");
 	TCODConsole::root->initRoot(SCREEN_WIDTH,SCREEN_HEIGHT,"FARL",false); // inits libtcod
 	TCODConsole *con = new TCODConsole(SCREEN_WIDTH,SCREEN_HEIGHT); // inits a new console
 
 	objects.push(&PC);
-	MakeMap(rooms, PC);
+	MakeMap(rooms, PC, objects);
 
 	
 	while(1){
@@ -162,7 +163,7 @@ int main()
 			break;
 		for(character **it = objects.begin(); it!= objects.end(); it++)
 			(*it)->Clear(con);
-		PC.Move(dx,dy);
+		PC.Move(dx,dy,objects);
 		dx=0;
 		dy=0;
 	}
@@ -194,7 +195,7 @@ bool HandleKeys(int &dx, int &dy, bool &recompute_fov)
 	return 0;
 }
 
-void MakeMap(TCODList<rect*> rooms, character &player)
+void MakeMap(TCODList<rect*> rooms, character &player, TCODList<character*> &objects)
 {
 
 	
@@ -230,6 +231,7 @@ void MakeMap(TCODList<rect*> rooms, character &player)
 		}
 		if(failed == false){
 			CreateRoom(*new_room);
+			PlaceObjects(*new_room,objects);
 			new_x=new_room->centre_x;
 			new_y=new_room->centre_y;
 			if(num_rooms==0){
@@ -332,3 +334,24 @@ void CreateVTunnel(int y1,int y2,int x)
 	}
 
 }
+
+void PlaceObjects(rect room, TCODList<character*> &objects)
+{
+	int num_monsters;
+	int x,y;
+	character *monster;
+	num_monsters = default->getInt(0,MAX_ROOM_MONSTERS);
+	for(int i = 0;i<num_monsters;i++){
+		x = default->getInt(room.x1-1,room.x2-1);
+		y = default->getInt(room.y1-1,room.y2-1);
+		if((default->getInt(0,100))<80){
+			monster = new character(x,y,"o",TCODColor::desaturatedGreen,"Orc");
+		}
+		else{
+			monster = new character(x,y,"T",TCODColor::darkerGreen,"Troll");
+		}
+		objects.push(monster);
+	}
+}
+
+
