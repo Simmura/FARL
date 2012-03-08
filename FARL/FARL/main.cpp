@@ -1,7 +1,7 @@
 /*
 FARL - Fucking About RogueLike
 Created: 16/02/12
-Last updated: 07/03/12
+Last updated: 08/03/12
 Bugs: 
 Todo: Combat! :D
 
@@ -10,9 +10,10 @@ Remember to clean before sending to Git
 
 #include "libtcod.hpp"
 #include <list>
+#include <string>
 using namespace std;
 
-bool HandleKeys(int &dx, int &dy, bool &fov_recompute);
+string HandleKeys(int &dx, int &dy, bool &fov_recompute);
 
 
 const int SCREEN_WIDTH = 80;
@@ -33,7 +34,8 @@ TCODColor colour_dark_ground(50,50,150);
 TCODColor colour_light_ground(200,180,50);
 TCODRandom * default = TCODRandom::getInstance();
 
-
+string player_action;
+string game_state;
 
 class tile{
 public:
@@ -138,13 +140,13 @@ TCODMap *fov_map = new TCODMap(MAP_WIDTH,MAP_HEIGHT);
 void RenderAll(TCODConsole *console, TCODList<character*> objects, bool &fov_recompute, character player);
 void PlaceObjects(rect room, TCODList<character*> &objects);
 void MakeMap(TCODList<rect*> rooms, character &player, TCODList<character*> &objects);
+void MoveOrAttack(int dx, int dy, TCODList<character*> objects, character &player);
 
 int main()
 {	
 	bool recompute_fov = true;
 	int dx=0;
 	int dy=0;
-	bool exit = 0;
 	TCODList<character*> objects;
 	TCODList<rect*> rooms;
 	character PC(25,23,"@",TCODColor::white,"PC");
@@ -154,45 +156,57 @@ int main()
 	objects.push(&PC);
 	MakeMap(rooms, PC, objects);
 
-	
+	game_state = "playing";
 	while(1){
 		RenderAll(con,objects,recompute_fov, PC);
 		TCODConsole::root->flush(); // actually prints the stuff
-		exit = HandleKeys(dx,dy,recompute_fov);
-		if (exit)
+		player_action = HandleKeys(dx,dy,recompute_fov);
+		if (player_action == "exit")
 			break;
 		for(character **it = objects.begin(); it!= objects.end(); it++)
 			(*it)->Clear(con);
-		PC.Move(dx,dy,objects);
+		MoveOrAttack(dx,dy,objects,PC);
+		if ((game_state == "playing") && (player_action != "didn't take turn")){
+			for(character **it = objects.begin(); it!= objects.end(); it++){
+			}
+		}
+		
 		dx=0;
 		dy=0;
 	}
 	return 0;
 }
 
-bool HandleKeys(int &dx, int &dy, bool &recompute_fov)
+string HandleKeys(int &dx, int &dy, bool &recompute_fov)
 {
 	TCOD_key_t key = TCODConsole::waitForKeypress(true);
-	if(key.vk==TCODK_UP){
-		recompute_fov = true;
-		dy = -1;
-	}
-	if(key.vk==TCODK_DOWN){
-		recompute_fov = true;
-		dy = 1;
-	}
-	if(key.vk==TCODK_LEFT){
-		recompute_fov = true;
-		dx = -1;
-	}
-	if(key.vk==TCODK_RIGHT){
-		recompute_fov = true;
-		dx = 1;
+	if (game_state == "playing"){
+		if(key.vk==TCODK_UP){
+			recompute_fov = true;
+			dy = -1;
+			return "moving";
+		}
+		if(key.vk==TCODK_DOWN){
+			recompute_fov = true;
+			dy = 1;
+			return "moving";
+		}
+		if(key.vk==TCODK_LEFT){
+			recompute_fov = true;
+			dx = -1;
+			return "moving";
+		}
+		if(key.vk==TCODK_RIGHT){
+			recompute_fov = true;
+			dx = 1;
+			return "moving";
+		}
 	}
 	if(key.vk==TCODK_ESCAPE)
-		return 1;
+		return "exit";
 
-	return 0;
+	else
+		return "didn't take turn";
 }
 
 void MakeMap(TCODList<rect*> rooms, character &player, TCODList<character*> &objects)
@@ -354,4 +368,22 @@ void PlaceObjects(rect room, TCODList<character*> &objects)
 	}
 }
 
-
+void MoveOrAttack(int dx, int dy, TCODList<character*> objects, character &player)
+{
+	int x, y;
+	x = player.x + dx;
+	y = player.y + dy;
+	string target = "none";
+	for(character **it = objects.begin(); it!= objects.end(); it++){
+		if (((*it)->x == x) && ((*it)->y == y)){
+			target = (*it)->name;
+			break;
+		}
+	}
+	if(target == "none"){
+		player.Move(dx,dy,objects);
+	}
+	else{
+		
+	}
+}
